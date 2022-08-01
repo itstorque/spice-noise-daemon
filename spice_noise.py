@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import argparse
-from turtle import update
+import os
+from sys import platform
+
 import yaml
 
 import numpy as np
@@ -93,7 +95,7 @@ def update_noise(t):
                 
             elif noise_data["type"] == "poisson":
                 
-                noise = np.random.poisson(noise_data["lambda"], len(t))
+                noise = noise_data["scale"] * np.random.poisson(noise_data["lambda"], len(t))
                 
                 save_noise(source, noise, t)
     
@@ -109,7 +111,16 @@ if __name__=="__main__":
     parser.add_argument('-n', '--noise', action='store_true', 
         help="launch noise daemon that reloads noise")
     
+    parser.add_argument("file", type=argparse.FileType('r'), help="LTSpice circuit to launch this script for.")
+    
     args = parser.parse_args()
+    
+    filename, file_extension = args.file.name.split(".")
+    
+    filepath = os.getcwd() + "/"
+    
+    if args.generate == False and args.noise == False:
+        args.generate, args.noise = True, True
     
     if args.generate:
         
@@ -121,6 +132,8 @@ if __name__=="__main__":
         T = source_data["entropy"]["T"]
         
         t = np.linspace(0, T, STEPS)
+        
+        print("Generating new noise component sources...")
         
         for source in source_data["sources"].keys():
         
@@ -136,7 +149,22 @@ if __name__=="__main__":
         
         import time, os.path
         
-        seed_time = os.path.getmtime("test.log")
+        try:
+            seed_time = os.path.getmtime(filename + ".log")
+            
+        except FileNotFoundError as e:
+            
+            if platform == "darwin":
+                os.system(f"/Applications/LTspice.app/Contents/MacOS/LTspice -b {filepath}{filename}.{file_extension} & open " + f"{filepath}{filename}.{file_extension}")
+                
+            else:
+                
+                print("Could not find log file.")
+                print("Make sure that the supplied file exists and make sure it is launched.")
+                
+                raise FileNotFoundError
+            
+        seed_time = os.path.getmtime(filename + ".log")
         
         source_data = load_yaml()
         
@@ -145,13 +173,24 @@ if __name__=="__main__":
         
         t = np.linspace(0, T, STEPS)
         
+        print("Launched noise daemon... Use LTSpice normally now :)")
+        
         while True:
             
             time.sleep(1)
             
-            if os.path.getmtime("test.log") > seed_time:
+            try:
+            
+                if os.path.getmtime(filename + ".log") > seed_time:
+                    
+                    seed_time = os.path.getmtime(filename + ".log")
+                    
+                    update_noise(t)
+                    
+            except FileNotFoundError as e:
                 
-                seed_time = os.path.getmtime("test.log")
+                if seed_time != None:
+                    print("LTSpice closed, killing daemon")
                 
-                update_noise(t)
+                break
     

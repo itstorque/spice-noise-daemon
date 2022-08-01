@@ -21,3 +21,4 @@ sources:
     noise:
       type: poisson
       lambda: 1
+      scale: 0.2
