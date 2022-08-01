@@ -15,3 +15,9 @@ sources:
       type: gaussian
       mean: 0
       std: 0.001
+
+  shot_noise:
+    source_type: voltage
+    noise:
+      type: poisson
+      lambda: 1

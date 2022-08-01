@@ -90,6 +90,12 @@ def update_noise(t):
                 noise = np.random.normal(noise_data["mean"], noise_data["std"], len(t))
                 
                 save_noise(source, noise, t)
+                
+            elif noise_data["type"] == "poisson":
+                
+                noise = np.random.poisson(noise_data["lambda"], len(t))
+                
+                save_noise(source, noise, t)
     
 if __name__=="__main__":
     

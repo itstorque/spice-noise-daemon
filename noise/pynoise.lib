@@ -14,3 +14,10 @@ v out in PWL file=noise/noise_data_noise_source_2.csv
 
 .ends noise_source_2
 
+.subckt shot_noise in out
+
+** NOISE SOURCE **
+v out in PWL file=noise/noise_data_shot_noise.csv
+
+.ends shot_noise
+
