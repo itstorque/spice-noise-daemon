@@ -1,0 +1,13 @@
+noise_source_1:
+  source_type: voltage
+  noise:
+    type: gaussian
+    mean: 0
+    std: 1
+
+noise_source_2:
+  source_type: voltage
+  noise:
+    type: gaussian
+    mean: 0
+    std: 0.001
