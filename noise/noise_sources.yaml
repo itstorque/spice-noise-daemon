@@ -1,13 +1,17 @@
-noise_source_1:
-  source_type: voltage
-  noise:
-    type: gaussian
-    mean: 0
-    std: 1
+entropy:
+  T: 1
+  STEPS: 1000
+sources:
+  noise_source_1:
+    source_type: voltage
+    noise:
+      type: gaussian
+      mean: 0
+      std: 1
 
-noise_source_2:
-  source_type: voltage
-  noise:
-    type: gaussian
-    mean: 0
-    std: 0.001
+  noise_source_2:
+    source_type: voltage
+    noise:
+      type: gaussian
+      mean: 0
+      std: 0.001

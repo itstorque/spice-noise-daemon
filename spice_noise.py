@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+from turtle import update
 import yaml
 
 import numpy as np
@@ -80,9 +81,9 @@ def save_noise(source_name, noise, t):
     
 def update_noise(t):
     
-    for source in source_data.keys():
+    for source in source_data["sources"].keys():
             
-            noise_data = source_data[source]["noise"]
+            noise_data = source_data["sources"][source]["noise"]
             
             if noise_data["type"] == "gaussian":
                 
@@ -110,17 +111,41 @@ if __name__=="__main__":
         
         lib_content = "** NOISE_Library **\n\n"
         
-        STEPS = 1000
-        T = 1
+        STEPS = source_data["entropy"]["STEPS"]
+        T = source_data["entropy"]["T"]
         
         t = np.linspace(0, T, STEPS)
         
-        for source in source_data.keys():
+        for source in source_data["sources"].keys():
         
-            lib_content += lib_generator(source, source_symbol="v" if source_data[source]["source_type"] else "i")
+            lib_content += lib_generator(source, source_symbol="v" if source_data["sources"][source]["source_type"] else "i")
             
-            create_asy(source, type=source_data[source]["source_type"])
+            create_asy(source, type=source_data["sources"][source]["source_type"])
         
         write_lib(lib_content)
         
         update_noise(t)
+
+    if args.noise:
+        
+        import time, os.path
+        
+        seed_time = os.path.getmtime("test.log")
+        
+        source_data = load_yaml()
+        
+        STEPS = source_data["entropy"]["STEPS"]
+        T = source_data["entropy"]["T"]
+        
+        t = np.linspace(0, T, STEPS)
+        
+        while True:
+            
+            time.sleep(1)
+            
+            if os.path.getmtime("test.log") > seed_time:
+                
+                seed_time = os.path.getmtime("test.log")
+                
+                update_noise(t)
+    
