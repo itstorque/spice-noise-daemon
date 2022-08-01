@@ -9,21 +9,20 @@ import yaml
 import numpy as np
 
 NOISE_FILE_DEST_PREAMBLE = "noise/noise_data_"
-
 DEFAULT_NOISE_DEF_FILE = "noise/noise_sources.yaml"
 LIB_FILE = "noise/pynoise.lib"
 
-def write_yaml(noise_source_dict, dest=DEFAULT_NOISE_DEF_FILE):
+def write_yaml(noise_source_dict, dest):
 
     with open(dest, 'w') as file:
         yaml.dump(noise_source_dict, file)
         
-def load_yaml(src=DEFAULT_NOISE_DEF_FILE):
+def load_yaml(src):
     
     with open(src, 'r') as file:
         return yaml.load(file, Loader=yaml.FullLoader)
     
-def lib_generator(name, source_symbol="V"):
+def lib_generator(NOISE_FILE_DEST_PREAMBLE, name, source_symbol="V"):
     
     return f""".subckt {name} in out
 
@@ -34,7 +33,7 @@ def lib_generator(name, source_symbol="V"):
 
 """
 
-def write_lib(content):
+def write_lib(LIB_FILE, content):
     
     with open(LIB_FILE, "w") as f:
         
@@ -42,7 +41,7 @@ def write_lib(content):
         f.close()
     
 
-def generate_asy_content(name, type="voltage"):
+def generate_asy_content(LIB_FILE, name, type="voltage"):
     
     return f"""Version 4
 SymbolType CELL
@@ -62,17 +61,17 @@ PINATTR PinName out
 PINATTR SpiceOrder 2
 """
 
-def create_asy(name, type="voltage"):
+def create_asy(filepath, LIB_FILE, name, type="voltage"):
     
-    content = generate_asy_content(name, type)
+    content = generate_asy_content(LIB_FILE, name, type)
     
-    with open(name+".asy", "w") as f:
+    with open(filepath + name+".asy", "w") as f:
         
         f.write(content)
         f.close()
     
 
-def save_noise(source_name, noise, t):
+def save_noise(NOISE_FILE_DEST_PREAMBLE, source_name, noise, t):
 
     with open(NOISE_FILE_DEST_PREAMBLE + source_name + ".csv", "w") as f:
         
@@ -81,7 +80,7 @@ def save_noise(source_name, noise, t):
             
         f.close()
     
-def update_noise(t):
+def update_noise(NOISE_FILE_DEST_PREAMBLE, t):
     
     for source in source_data["sources"].keys():
             
@@ -91,14 +90,22 @@ def update_noise(t):
                 
                 noise = np.random.normal(noise_data["mean"], noise_data["std"], len(t))
                 
-                save_noise(source, noise, t)
+                save_noise(NOISE_FILE_DEST_PREAMBLE, source, noise, t)
                 
             elif noise_data["type"] == "poisson":
                 
                 noise = noise_data["scale"] * np.random.poisson(noise_data["lambda"], len(t))
                 
-                save_noise(source, noise, t)
-    
+                save_noise(NOISE_FILE_DEST_PREAMBLE, source, noise, t)
+
+def file_path(parser, arg):
+    if not os.path.exists(arg):
+        parser.error("The file %s does not exist!" % arg)
+    else:
+        return os.path.dirname(os.path.abspath(arg)) + "/", \
+               ''.join(os.path.basename(arg).split(".")[:-1]),\
+               os.path.basename(arg).split(".")[-1]
+
 if __name__=="__main__":
     
     # TODO: add path
@@ -111,20 +118,22 @@ if __name__=="__main__":
     parser.add_argument('-n', '--noise', action='store_true', 
         help="launch noise daemon that reloads noise")
     
-    parser.add_argument("file", type=argparse.FileType('r'), help="LTSpice circuit to launch this script for.")
+    parser.add_argument("file", type=lambda x: file_path(parser, x), help="LTSpice circuit to launch this script for.")
     
     args = parser.parse_args()
     
-    filename, file_extension = args.file.name.split(".")
+    filepath, filename, file_extension = args.file
     
-    filepath = os.getcwd() + "/"
+    NOISE_FILE_DEST_PREAMBLE = filepath + NOISE_FILE_DEST_PREAMBLE
+    DEFAULT_NOISE_DEF_FILE   = filepath + DEFAULT_NOISE_DEF_FILE
+    LIB_FILE                 = filepath + LIB_FILE
     
     if args.generate == False and args.noise == False:
         args.generate, args.noise = True, True
     
     if args.generate:
         
-        source_data = load_yaml()
+        source_data = load_yaml(DEFAULT_NOISE_DEF_FILE)
         
         lib_content = "** NOISE_Library **\n\n"
         
@@ -137,20 +146,20 @@ if __name__=="__main__":
         
         for source in source_data["sources"].keys():
         
-            lib_content += lib_generator(source, source_symbol="v" if source_data["sources"][source]["source_type"] else "i")
+            lib_content += lib_generator(NOISE_FILE_DEST_PREAMBLE, source, source_symbol="v" if source_data["sources"][source]["source_type"]=="voltage" else "i")
             
-            create_asy(source, type=source_data["sources"][source]["source_type"])
+            create_asy(filepath, LIB_FILE, source, type=source_data["sources"][source]["source_type"])
         
-        write_lib(lib_content)
+        write_lib(LIB_FILE, lib_content)
         
-        update_noise(t)
+        update_noise(NOISE_FILE_DEST_PREAMBLE, t)
 
     if args.noise:
         
         import time, os.path
         
         try:
-            seed_time = os.path.getmtime(filename + ".log")
+            seed_time = os.path.getmtime(filepath + filename + ".log")
             
         except FileNotFoundError as e:
             
@@ -164,28 +173,30 @@ if __name__=="__main__":
                 
                 raise FileNotFoundError
             
-        seed_time = os.path.getmtime(filename + ".log")
-        
-        source_data = load_yaml()
-        
-        STEPS = source_data["entropy"]["STEPS"]
-        T = source_data["entropy"]["T"]
-        
-        t = np.linspace(0, T, STEPS)
+        seed_time = os.path.getmtime(filepath + filename + ".log")
+        yaml_sources_time = os.path.getmtime(DEFAULT_NOISE_DEF_FILE)
         
         print("Launched noise daemon... Use LTSpice normally now :)")
         
         while True:
+        
+            source_data = load_yaml(DEFAULT_NOISE_DEF_FILE)
+            
+            STEPS = source_data["entropy"]["STEPS"]
+            T = source_data["entropy"]["T"]
+            
+            t = np.linspace(0, T, STEPS)
             
             time.sleep(1)
             
             try:
             
-                if os.path.getmtime(filename + ".log") > seed_time:
+                if os.path.getmtime(filepath + filename + ".log") > seed_time or os.path.getmtime(DEFAULT_NOISE_DEF_FILE) > yaml_sources_time:
                     
-                    seed_time = os.path.getmtime(filename + ".log")
+                    seed_time = os.path.getmtime(filepath + filename + ".log")
+                    yaml_sources_time = os.path.getmtime(DEFAULT_NOISE_DEF_FILE)
                     
-                    update_noise(t)
+                    update_noise(NOISE_FILE_DEST_PREAMBLE, t)
                     
             except FileNotFoundError as e:
                 

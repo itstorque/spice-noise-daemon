@@ -5,9 +5,9 @@ LINE Normal 0 0 0 8
 CIRCLE Normal -32 8 32 72
 TEXT 0 40 Center 0 noise_source_1
 SYMATTR Prefix X
-SYMATTR Description voltage noise source
+SYMATTR Description current noise source
 SYMATTR SpiceModel noise_source_1
-SYMATTR ModelFile noise/pynoise.lib
+SYMATTR ModelFile /Users/torque/programs/spice-noise-daemon/snspd-dark-counts/noise/pynoise.lib
 PIN 0 0 NONE 8
 PINATTR PinName in
 PINATTR SpiceOrder 1
