@@ -88,7 +88,10 @@ def create_asy(filepath, LIB_FILE, name, type="voltage"):
 def save_noise(NOISE_FILE_DEST_PREAMBLE, source_name, noise, t):
 
     with open(NOISE_FILE_DEST_PREAMBLE + source_name + ".csv", "w") as f:
-        
+       
+        # set initial noise to zero to have a consistent DC operating point
+        noise[0] = 0
+
         for i in range(0,len(t)):
             f.write("{:E}\t{:E}\n".format( t[i], noise[i] ))
             
