@@ -5,6 +5,7 @@ import os
 from sys import platform
 
 import yaml
+import re
 
 import numpy as np
 import colorednoise as cn
@@ -21,7 +22,7 @@ def write_yaml(noise_source_dict, dest):
 def load_yaml(src):
     
     with open(src, 'r') as file:
-        return yaml.load(file, Loader=yaml.FullLoader)
+        return yaml.load(file, Loader=yaml_loader)
     
 def lib_generator(NOISE_FILE_DEST_PREAMBLE, name, source_symbol="V"):
     
@@ -112,6 +113,23 @@ def file_path(parser, arg):
         return os.path.dirname(os.path.abspath(arg)) + "/", \
                ''.join(os.path.basename(arg).split(".")[:-1]),\
                os.path.basename(arg).split(".")[-1]
+
+# CUSTOM YAML LOADER
+# 
+# by default, loader doesn't accept 1e5, need 1.e+5...
+# This implies + and .
+
+yaml_loader = yaml.SafeLoader
+yaml_loader.add_implicit_resolver(
+        u'tag:yaml.org,2002:float',
+        re.compile(u'''^(?:
+        [-+]?(?:[0-9][0-9_]*)\\.[0-9_]*(?:[eE][-+]?[0-9]+)?
+        |[-+]?(?:[0-9][0-9_]*)(?:[eE][-+]?[0-9]+)
+        |\\.[0-9_]+(?:[eE][-+][0-9]+)?
+        |[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\\.[0-9_]*
+        |[-+]?\\.(?:inf|Inf|INF)
+        |\\.(?:nan|NaN|NAN))$''', re.X),
+        list(u'-+0123456789.'))
 
 if __name__=="__main__":
     
@@ -220,6 +238,8 @@ sources:
         print("Launched noise daemon... Use LTSpice normally now :)")
         
         while True:
+            
+            time.sleep(1)
         
             source_data = load_yaml(DEFAULT_NOISE_DEF_FILE)
             
@@ -228,14 +248,14 @@ sources:
             
             t = np.linspace(0, T, STEPS)
             
-            time.sleep(1)
-            
             try:
+                
+                spec_file_change = os.path.getmtime(DEFAULT_NOISE_DEF_FILE) > yaml_sources_time
             
-                if os.path.getmtime(filepath + filename + ".log") > seed_time or os.path.getmtime(DEFAULT_NOISE_DEF_FILE) > yaml_sources_time:
+                if os.path.getmtime(filepath + filename + ".log") > seed_time or spec_file_change:
                     
                     seed_time = os.path.getmtime(filepath + filename + ".log")
-                    yaml_sources_time = os.path.getmtime(DEFAULT_NOISE_DEF_FILE)
+                    if spec_file_change: yaml_sources_time = os.path.getmtime(DEFAULT_NOISE_DEF_FILE)
                     
                     update_noise(NOISE_FILE_DEST_PREAMBLE, t)
                     

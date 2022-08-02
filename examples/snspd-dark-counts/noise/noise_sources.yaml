@@ -5,11 +5,15 @@ sources:
   noise_source_1:
     source_type: current
     # noise:
+    #   type: gaussian
+    #   mean: 0
+    #   std: 1e-5
+    # noise:
     #   type: poisson
     #   lambda: 5
-    #   scale: 0.000002
+    #   scale: 1e-7
     noise:
       type: one_over_f
       power: 1
-      fmin: 1e-5
-      scale: 10
+      fmin: 0
+      scale: 5e-7

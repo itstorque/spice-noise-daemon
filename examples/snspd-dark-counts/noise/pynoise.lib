@@ -3,7 +3,7 @@
 .subckt noise_source_1 in out
 
 ** NOISE SOURCE **
-i out in PWL file=/Users/torque/programs/spice-noise-daemon/snspd-dark-counts/noise/noise_data_noise_source_1.csv
+i out in PWL file=/Users/torque/programs/spice-noise-daemon/examples/snspd-dark-counts/noise/noise_data_noise_source_1.csv
 
 .ends noise_source_1
 
