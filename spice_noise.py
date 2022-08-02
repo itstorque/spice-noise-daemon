@@ -7,6 +7,7 @@ from sys import platform
 import yaml
 
 import numpy as np
+import colorednoise as cn
 
 NOISE_FILE_DEST_PREAMBLE = "noise/noise_data_"
 DEFAULT_NOISE_DEF_FILE = "noise/noise_sources.yaml"
@@ -97,6 +98,12 @@ def update_noise(NOISE_FILE_DEST_PREAMBLE, t):
                 noise = noise_data["scale"] * np.random.poisson(noise_data["lambda"], len(t))
                 
                 save_noise(NOISE_FILE_DEST_PREAMBLE, source, noise, t)
+                
+            elif noise_data["type"] == "one_over_f":
+                
+                noise = noise_data["scale"] * cn.powerlaw_psd_gaussian(noise_data["power"], len(t), fmin=noise_data["fmin"])
+                
+                save_noise(NOISE_FILE_DEST_PREAMBLE, source, noise, t)
 
 def file_path(parser, arg):
     if not os.path.exists(arg):
@@ -132,11 +139,11 @@ if __name__=="__main__":
     LIB_FILE                 = filepath + LIB_FILE
     
     if args.setup:
-        print("Setting up directory " + os.getcwd())
+        print("Setting up directory " + filepath)
         
-        os.makedirs(os.getcwd() + "/noise", exist_ok=True)
+        os.makedirs(filepath + "/noise", exist_ok=True)
         
-        new_file_loc = os.getcwd() + "/noise/noise_sources.yaml"
+        new_file_loc = filepath + "/noise/noise_sources.yaml"
         
         overwrite = True
         

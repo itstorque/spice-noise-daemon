@@ -1,0 +1,15 @@
+entropy:
+  T: 0.000001
+  STEPS: 1000
+sources:
+  noise_source_1:
+    source_type: current
+    # noise:
+    #   type: poisson
+    #   lambda: 5
+    #   scale: 0.000002
+    noise:
+      type: one_over_f
+      power: 1
+      fmin: 1e-5
+      scale: 10
