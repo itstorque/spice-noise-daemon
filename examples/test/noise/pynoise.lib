@@ -1,0 +1,23 @@
+** NOISE_Library **
+
+.subckt noise_source_1 in out
+
+** NOISE SOURCE **
+v out in PWL file=/Users/torque/programs/spice-noise-daemon/examples/test/noise/noise_data_noise_source_1.csv
+
+.ends noise_source_1
+
+.subckt noise_source_2 in out
+
+** NOISE SOURCE **
+v out in PWL file=/Users/torque/programs/spice-noise-daemon/examples/test/noise/noise_data_noise_source_2.csv
+
+.ends noise_source_2
+
+.subckt shot_noise in out
+
+** NOISE SOURCE **
+v out in PWL file=/Users/torque/programs/spice-noise-daemon/examples/test/noise/noise_data_shot_noise.csv
+
+.ends shot_noise
+

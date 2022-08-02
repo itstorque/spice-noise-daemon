@@ -105,6 +105,18 @@ def update_noise(NOISE_FILE_DEST_PREAMBLE, t):
                 noise = noise_data["scale"] * cn.powerlaw_psd_gaussian(noise_data["power"], len(t), fmin=noise_data["fmin"])
                 
                 save_noise(NOISE_FILE_DEST_PREAMBLE, source, noise, t)
+                
+            elif noise_data["type"] == "custom":
+                
+                N = len(t)
+            
+                noise = eval(noise_data["command"])
+                
+                save_noise(NOISE_FILE_DEST_PREAMBLE, source, noise, t)
+            
+            else:
+                print("Wrong noise type defined in .yaml file")
+                raise TypeError                
 
 def file_path(parser, arg):
     if not os.path.exists(arg):

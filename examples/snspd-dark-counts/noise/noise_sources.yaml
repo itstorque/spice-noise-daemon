@@ -12,8 +12,11 @@ sources:
     #   type: poisson
     #   lambda: 5
     #   scale: 1e-7
+    # noise:
+    #   type: one_over_f
+    #   power: 1
+    #   fmin: 0
+    #   scale: 7e-7
     noise:
-      type: one_over_f
-      power: 1
-      fmin: 0
-      scale: 5e-7
+      type: custom
+      command: 1e-3*np.ones(N) + 5e-2*np.linspace(0, 1, N)
