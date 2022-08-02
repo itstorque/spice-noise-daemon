@@ -152,9 +152,11 @@ if __name__=="__main__":
     
     filepath, filename, file_extension = args.file
     
-    NOISE_FILE_DEST_PREAMBLE = filepath + NOISE_FILE_DEST_PREAMBLE
-    DEFAULT_NOISE_DEF_FILE   = filepath + DEFAULT_NOISE_DEF_FILE
-    LIB_FILE                 = filepath + LIB_FILE
+    if platform != "linux":
+        # wine doesn't like absolute paths, so just use the relative path noise/
+        NOISE_FILE_DEST_PREAMBLE = filepath + NOISE_FILE_DEST_PREAMBLE
+        DEFAULT_NOISE_DEF_FILE   = filepath + DEFAULT_NOISE_DEF_FILE
+        LIB_FILE                 = filepath + LIB_FILE
     
     if args.setup:
         print("Setting up directory " + filepath)
