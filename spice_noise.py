@@ -118,6 +118,9 @@ if __name__=="__main__":
     parser.add_argument('-n', '--noise', action='store_true', 
         help="launch noise daemon that reloads noise")
     
+    parser.add_argument('-s', '--setup', action='store_true', 
+        help="setup directory for SPICE noise simulations")
+    
     parser.add_argument("file", type=lambda x: file_path(parser, x), help="LTSpice circuit to launch this script for.")
     
     args = parser.parse_args()
@@ -128,7 +131,38 @@ if __name__=="__main__":
     DEFAULT_NOISE_DEF_FILE   = filepath + DEFAULT_NOISE_DEF_FILE
     LIB_FILE                 = filepath + LIB_FILE
     
-    if args.generate == False and args.noise == False:
+    if args.setup:
+        print("Setting up directory " + os.getcwd())
+        
+        os.makedirs(os.getcwd() + "/noise", exist_ok=True)
+        
+        new_file_loc = os.getcwd() + "/noise/noise_sources.yaml"
+        
+        overwrite = True
+        
+        if os.path.exists(new_file_loc):
+            exists_string = "noise_sources.yaml already exists, type [overwrite] to overwrite otherwise hit enter.\n    > "
+            if input(exists_string) == "overwrite":
+                overwrite = True
+            else:
+                overwrite = False
+        
+        if overwrite:
+            with open(new_file_loc, "w") as f:
+                f.write("""entropy:
+  T: 1
+  STEPS: 1000
+sources:
+  noise_source_1:
+    source_type: current
+    noise:
+      type: gaussian
+      mean: 0
+      std: 0.0000001
+""")
+                f.close()
+    
+    if args.generate == False and args.noise == False and args.setup == False:
         args.generate, args.noise = True, True
     
     if args.generate:
