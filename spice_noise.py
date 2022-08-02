@@ -45,9 +45,21 @@ def write_lib(LIB_FILE, content):
 
 def generate_asy_content(LIB_FILE, name, type="voltage"):
     
+    if type=="current":
+        accent = """LINE Normal 32 0 32 16
+LINE Normal 32 0 36 8
+LINE Normal 32 0 28 8"""
+    elif type=="voltage":
+        accent = """LINE Normal 32 0 32 8
+LINE Normal 28 4 36 4
+LINE Normal 28 16 36 16"""
+    else: 
+        raise TypeError
+    
     return f"""Version 4
 SymbolType CELL
 LINE Normal 0 80 0 72
+{accent}
 LINE Normal 0 0 0 8
 CIRCLE Normal -32 8 32 72
 TEXT 0 40 Center 0 {name}
